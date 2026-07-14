@@ -1,0 +1,4 @@
+github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
+github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/tggo/goRDFlib v0.1.13 h1:y8GqNl+b4t5zChvnXBr+6FDjhhGNH9H8eKyHClxZgcQ=
+github.com/tggo/goRDFlib v0.1.13/go.mod h1:IZCDooVBHaMIs6bCPsltkLQb3mXanCvs2GkuIwQ5oD8=
