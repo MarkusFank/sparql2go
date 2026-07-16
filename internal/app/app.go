@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/MarkusFank/sparql2go/internal/rdf"
+	"github.com/MarkusFank/sparql2go/internal/webserver"
 )
 
 func Run(inputFile string, port int) error {
@@ -21,6 +22,12 @@ func Run(inputFile string, port int) error {
 	}
 
 	err = rdf.Init(inputFile)
+
+	if err != nil {
+		return err
+	}
+
+	err = webserver.Run(port, inputFile)
 
 	if err != nil {
 		return err
