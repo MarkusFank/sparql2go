@@ -77,8 +77,6 @@ func handleQuery(w http.ResponseWriter, r *http.Request) {
 		res.Result = append(res.Result, mapObj)
 	}
 
-	fmt.Printf("This is the result: %v\n", res)
-
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(res)
 
