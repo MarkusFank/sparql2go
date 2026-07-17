@@ -38,8 +38,8 @@ func hello(rdfFile string) func(http.ResponseWriter, *http.Request) {
 }
 
 type queryResult struct {
-	count  int
-	result []map[string]string
+	Count  int                 `json:"count"`
+	Result []map[string]string `json:"result"`
 }
 
 func handleQuery(w http.ResponseWriter, r *http.Request) {
@@ -65,17 +65,26 @@ func handleQuery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := queryResult{count: 0, result: []map[string]string{}}
-	for _, row := range queryRes.Bindings {
-		res.count++
+	res := queryResult{Count: 0, Result: []map[string]string{}}
+	for i, row := range queryRes.Bindings {
+		fmt.Printf("Row %d\n", i)
+		res.Count++
 		mapObj := map[string]string{}
 		for k, v := range row {
 			mapObj[k] = v.String()
 		}
 
-		res.result = append(res.result, mapObj)
+		res.Result = append(res.Result, mapObj)
 	}
 
+	fmt.Printf("This is the result: %v\n", res)
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(res)
+	err = json.NewEncoder(w).Encode(res)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Error while JSON encoding %v", err)
+		return
+	}
 }
