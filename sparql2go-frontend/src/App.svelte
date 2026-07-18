@@ -1,19 +1,37 @@
-<script>
-  import svelteLogo from './assets/svelte.svg'
-  import viteLogo from './assets/vite.svg'
-  import heroImg from './assets/hero.png'
-  import Counter from './lib/Counter.svelte'
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import type { InitResponse } from './types/InitResponse';
+
+  let isLoading = true;
+  let rdfFilePath = '';
+
+  onMount(async () => {
+    try {
+      const res = await fetch('http://localhost:4711/api/init'); // TODO do not hardcode backend uri
+
+      if (res.ok) {
+        let responseObj: InitResponse = await res.json();
+        rdfFilePath = responseObj.rdfFilePath;
+      }
+    } finally {
+      isLoading = false;
+    }
+  });
 </script>
 
 <section id="center">
-  <div class="hero">
-    <img src={heroImg} class="base" width="170" height="179" alt="" />
-    <img src={svelteLogo} class="framework" alt="Svelte logo" />
-    <img src={viteLogo} class="vite" alt="Vite logo" />
-  </div>
-  <div>
-    <h1>Get started</h1>
-    <p>Edit <code>src/App.svelte</code> and save to test <code>HMR</code></p>
-  </div>
-  <Counter />
+  {#if isLoading}
+    <div>Initializing ... Please wait</div>
+  {:else}
+    <div class="top-message">You are using sparql2go with file "{rdfFilePath}"</div>
+  {/if}
 </section>
+
+<style>
+  .top-message {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+</style>

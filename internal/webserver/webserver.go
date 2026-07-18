@@ -10,31 +10,42 @@ import (
 	"github.com/tggo/goRDFlib/sparql"
 )
 
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Vary", "Origin")
+
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func Run(port int, rdfFile string) error {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /", hello(rdfFile))
-
 	mux.HandleFunc("POST /query", handleQuery)
 
+	mux.HandleFunc("GET /api/init", initEndpoint(rdfFile))
+
 	fmt.Printf("Webserver is running on port %d. Open http://localhost:%d in your browser\n", port, port)
-	err := http.ListenAndServe(fmt.Sprintf(":%d", port), mux)
+	handler := corsMiddleware(mux)
+	err := http.ListenAndServe(fmt.Sprintf(":%d", port), handler)
 
 	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func hello(rdfFile string) func(http.ResponseWriter, *http.Request) {
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello, you are working with file %q", rdfFile)
-
-		w.WriteHeader(200)
-	}
 }
 
 type queryResult struct {
@@ -84,5 +95,18 @@ func handleQuery(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Error while JSON encoding %v", err)
 		return
+	}
+}
+
+type initEndpointResponse struct {
+	RdfFilePath string `json:"rdfFilePath"`
+}
+
+func initEndpoint(rdfFile string) func(http.ResponseWriter, *http.Request) {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		res := initEndpointResponse{RdfFilePath: rdfFile}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(res)
 	}
 }
