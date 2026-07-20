@@ -33,7 +33,7 @@ func Run(port int, rdfFile string) error {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("POST /query", handleQuery)
+	mux.HandleFunc("POST /api/query", handleQuery)
 
 	mux.HandleFunc("GET /api/init", initEndpoint(rdfFile))
 
@@ -51,10 +51,12 @@ func Run(port int, rdfFile string) error {
 type queryResult struct {
 	Count  int                 `json:"count"`
 	Result []map[string]string `json:"result"`
+	Vars   []string            `json:"vars"`
 }
 
 func handleQuery(w http.ResponseWriter, r *http.Request) {
 
+	// TODO use multipart form
 	if err := r.ParseForm(); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -76,9 +78,8 @@ func handleQuery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := queryResult{Count: 0, Result: []map[string]string{}}
-	for i, row := range queryRes.Bindings {
-		fmt.Printf("Row %d\n", i)
+	res := queryResult{Count: 0, Vars: queryRes.Vars, Result: []map[string]string{}}
+	for _, row := range queryRes.Bindings {
 		res.Count++
 		mapObj := map[string]string{}
 		for k, v := range row {
