@@ -33,13 +33,14 @@
 
   const executeQuery = async () => {
     executeQueryDialog.showModal();
-    const params = new URLSearchParams(); // TODO use multipart formdata
-    params.append('query', queryText);
 
     try {
       const queryRes = await fetch('http://localhost:4711/api/query', {
         method: 'POST',
-        body: params,
+        body: queryText,
+        headers: {
+          'Content-Type': 'text/plain',
+        },
       });
 
       if (queryRes.ok) {

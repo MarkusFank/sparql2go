@@ -3,6 +3,7 @@ package webserver
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -56,13 +57,21 @@ type queryResult struct {
 
 func handleQuery(w http.ResponseWriter, r *http.Request) {
 
-	// TODO use multipart form
-	if err := r.ParseForm(); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+	if r.Header.Get("Content-Type") != "text/plain" {
+		http.Error(w, "Content-Type must be text/plain", http.StatusUnsupportedMediaType)
 		return
 	}
 
-	query := r.Form.Get("query")
+	defer r.Body.Close()
+
+	body, err := io.ReadAll(r.Body)
+
+	if err != nil {
+		http.Error(w, "Unable to read body", http.StatusInternalServerError)
+		return
+	}
+
+	query := string(body)
 
 	if len(strings.TrimSpace(query)) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
