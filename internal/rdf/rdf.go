@@ -10,7 +10,16 @@ import (
 	"github.com/tggo/goRDFlib/turtle"
 )
 
-var Graph *rdflibgo.Graph
+var graph *rdflibgo.Graph
+var rdfFile string
+
+func Graph() *rdflibgo.Graph {
+	return graph
+}
+
+func File() string {
+	return rdfFile
+}
 
 func Init(inputFile string) error {
 	file, err := os.Open(inputFile)
@@ -20,19 +29,20 @@ func Init(inputFile string) error {
 	}
 
 	ext := filepath.Ext(inputFile)
-	Graph = rdflibgo.NewGraph()
+	graph = rdflibgo.NewGraph()
 	switch ext {
 	case ".nt":
-		if err = nt.Parse(Graph, file); err != nil {
+		if err = nt.Parse(graph, file); err != nil {
 			return err
 		}
 	case ".ttl":
-		if err = turtle.Parse(Graph, file); err != nil {
+		if err = turtle.Parse(graph, file); err != nil {
 			return err
 		}
 	default:
 		return fmt.Errorf("Unable to parse file with extension %q", ext)
 	}
 
+	rdfFile = inputFile
 	return nil
 }

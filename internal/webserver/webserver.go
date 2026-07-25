@@ -36,7 +36,7 @@ func Run(port int, rdfFile string) error {
 
 	mux.HandleFunc("POST /api/query", handleQuery)
 
-	mux.HandleFunc("GET /api/init", initEndpoint(rdfFile))
+	mux.HandleFunc("GET /api/init", initEndpoint)
 
 	fmt.Printf("Webserver is running on port %d. Open http://localhost:%d in your browser\n", port, port)
 	handler := corsMiddleware(mux)
@@ -79,7 +79,7 @@ func handleQuery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	queryRes, err := sparql.Query(rdf.Graph, query)
+	queryRes, err := sparql.Query(rdf.Graph(), query)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -112,11 +112,8 @@ type initEndpointResponse struct {
 	RdfFilePath string `json:"rdfFilePath"`
 }
 
-func initEndpoint(rdfFile string) func(http.ResponseWriter, *http.Request) {
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		res := initEndpointResponse{RdfFilePath: rdfFile}
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(res)
-	}
+func initEndpoint(w http.ResponseWriter, r *http.Request) {
+	res := initEndpointResponse{RdfFilePath: rdf.File()}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(res)
 }
