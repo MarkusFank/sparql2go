@@ -14,7 +14,7 @@
 
   onMount(async () => {
     try {
-      const res = await fetch('http://localhost:4711/api/init'); // TODO do not hardcode backend uri
+      const res = await fetch('/api/init');
 
       if (res.ok) {
         let responseObj: InitResponse = await res.json();
@@ -35,7 +35,7 @@
     executeQueryDialog.showModal();
 
     try {
-      const queryRes = await fetch('http://localhost:4711/api/query', {
+      const queryRes = await fetch('/api/query', {
         method: 'POST',
         body: queryText,
         headers: {
