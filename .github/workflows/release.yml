@@ -1,0 +1,134 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
+          - goos: darwin
+            goarch: amd64
+          - goos: darwin
+            goarch: arm64
+          - goos: windows
+            goarch: amd64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache: true
+          
+      - name: Set up node
+        uses: actions/setup-node@v4
+  
+      - name: Install dependencies
+        run: cd ./sparql2go-frontend && npm ci
+          
+      - name: Build and Copy frontend
+        run: sh copy-assets.sh
+
+      - name: Test
+        run: go test ./...
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+          VERSION: ${{ github.ref_name }}
+          COMMIT: ${{ github.sha }}
+        run: |
+          mkdir -p dist
+
+          VERSION="${GITHUB_REF_NAME}"
+          VERSION="${VERSION#v}"
+
+          BINARY="sparql2go"
+          if [ "${GOOS}" = "windows" ]; then
+            BINARY="sparql2go.exe"
+          fi
+
+          go build \
+            -ldflags="
+              -s -w
+              -X main.version=${VERSION}
+              -X main.commit=${COMMIT}
+              -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+            " \
+            -o "dist/${BINARY}" \
+            ./cmd/sparql2go
+
+      - name: Package
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          VERSION="${VERSION#v}"
+
+          PACKAGE_NAME="sparql2go_${VERSION}_${GOOS}_${GOARCH}"
+
+          mkdir -p "dist/${PACKAGE_NAME}"
+
+          if [ "${GOOS}" = "windows" ]; then
+            cp dist/sparql2go.exe "dist/${PACKAGE_NAME}/"
+            cd dist
+            zip -r "${PACKAGE_NAME}.zip" "${PACKAGE_NAME}"
+          else
+            cp dist/sparql2go "dist/${PACKAGE_NAME}/"
+            tar -czf "dist/${PACKAGE_NAME}.tar.gz" \
+              -C dist "${PACKAGE_NAME}"
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/*.tar.gz
+          if-no-files-found: ignore
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.goos }}-${{ matrix.goarch }}-windows
+          path: dist/*.zip
+          if-no-files-found: ignore
+
+  github-release:
+    name: Create GitHub Release
+    needs: release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            dist/*.tar.gz
+            dist/*.zip
