@@ -24,7 +24,7 @@ jobs:
       uses: actions/setup-node@v4
 
     - name: Install dependencies
-      run: npm install
+      run: cd ./sparql2go && npm ci
         
     - name: Build and Copy frontend
       run: sh copy-assets.sh
