@@ -8,9 +8,16 @@ import (
 	"github.com/MarkusFank/sparql2go/internal/app"
 )
 
+var (
+	version = "dev"
+	commit  = "unknown"
+	date    = "unknown"
+)
+
 func main() {
 
-	fmt.Println("Welcome to sparql2go!")
+	fmt.Printf("Welcome to sparql2go! You are using version %s, commit %s, built %s\n", version, commit, date)
+
 	inputFile := flag.String("input", "", "RDF file to read")
 	port := flag.Int("Port", 4711, "Port of the local web server that is being started")
 
