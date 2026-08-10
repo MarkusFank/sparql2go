@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"strings"
 
 	"github.com/MarkusFank/sparql2go/internal/rdf"
+	assets "github.com/MarkusFank/sparql2go/web"
 	"github.com/tggo/goRDFlib/sparql"
 )
 
@@ -37,6 +39,9 @@ func Run(port int, rdfFile string) error {
 	mux.HandleFunc("POST /api/query", handleQuery)
 
 	mux.HandleFunc("GET /api/init", initEndpoint)
+
+	sub, _ := fs.Sub(assets.Dist, "dist")
+	mux.Handle("/", http.FileServer(http.FS(sub)))
 
 	fmt.Printf("Webserver is running on port %d. Open http://localhost:%d in your browser\n", port, port)
 	handler := corsMiddleware(mux)
