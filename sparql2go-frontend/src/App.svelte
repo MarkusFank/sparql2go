@@ -273,7 +273,10 @@
   }
 
   .table-wrap {
-    overflow-x: auto;
+    /* Keep large result sets self-contained so both scrollbars stay visible. */
+    max-height: min(60vh, 640px);
+    overflow: auto;
+    overscroll-behavior: contain;
   }
 
   table {
@@ -290,6 +293,9 @@
   }
 
   th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
     color: var(--text-h);
     background: color-mix(in srgb, var(--code-bg) 70%, transparent);
     font-size: 0.8rem;
