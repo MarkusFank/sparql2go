@@ -7,11 +7,14 @@ import (
 
 	rdflibgo "github.com/tggo/goRDFlib"
 	"github.com/tggo/goRDFlib/nt"
+	"github.com/tggo/goRDFlib/sparql"
 	"github.com/tggo/goRDFlib/turtle"
 )
 
 var graph *rdflibgo.Graph
 var rdfFile string
+
+var lastQueryResult *sparql.Result
 
 func Graph() *rdflibgo.Graph {
 	return graph
@@ -19,6 +22,10 @@ func Graph() *rdflibgo.Graph {
 
 func File() string {
 	return rdfFile
+}
+
+func LastQueryResult() *sparql.Result {
+	return lastQueryResult
 }
 
 func Init(inputFile string) error {
@@ -45,4 +52,16 @@ func Init(inputFile string) error {
 
 	rdfFile = inputFile
 	return nil
+}
+
+func Query(queryText string) (*sparql.Result, error) {
+	res, err := sparql.Query(graph, queryText)
+
+	if err != nil {
+		lastQueryResult = nil
+	} else if res != nil {
+		lastQueryResult = res
+	}
+
+	return res, err
 }

@@ -1,6 +1,7 @@
 package webserver
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/MarkusFank/sparql2go/internal/rdf"
 	assets "github.com/MarkusFank/sparql2go/web"
-	"github.com/tggo/goRDFlib/sparql"
 )
 
 func corsMiddleware(next http.Handler) http.Handler {
@@ -39,6 +39,8 @@ func Run(port int, rdfFile string) error {
 	mux.HandleFunc("POST /api/query", handleQuery)
 
 	mux.HandleFunc("GET /api/init", initEndpoint)
+
+	mux.HandleFunc("GET /api/download", handleDownload)
 
 	sub, _ := fs.Sub(assets.Dist, "dist")
 	mux.Handle("/", http.FileServer(http.FS(sub)))
@@ -84,7 +86,7 @@ func handleQuery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	queryRes, err := sparql.Query(rdf.Graph(), query)
+	queryRes, err := rdf.Query(query)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -109,6 +111,42 @@ func handleQuery(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Error while JSON encoding %v", err)
+		return
+	}
+}
+
+func handleDownload(w http.ResponseWriter, r *http.Request) {
+	downloadType := r.URL.Query().Get("type")
+
+	if rdf.LastQueryResult() == nil {
+		http.Error(w, "No query result available", http.StatusBadRequest)
+		return
+	}
+
+	switch downloadType {
+	case "csv":
+		w.Header().Set("Content-Type", "text/csv")
+		w.Header().Set("Content-Disposition", `attachment; filename="query_result.csv"`)
+
+		writer := csv.NewWriter(w)
+		defer writer.Flush()
+		writer.Write(rdf.LastQueryResult().Vars)
+
+		for _, row := range rdf.LastQueryResult().Bindings {
+			vals := []string{}
+			for _, v := range row {
+				vals = append(vals, v.String())
+			}
+
+			writer.Write(vals)
+		}
+
+		if err := writer.Error(); err != nil {
+			http.Error(w, "Unable to create CSV file", http.StatusInternalServerError)
+			return
+		}
+	default:
+		http.Error(w, fmt.Sprintf("File type %q is not supported!", downloadType), http.StatusBadRequest)
 		return
 	}
 }

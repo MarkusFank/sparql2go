@@ -91,7 +91,15 @@
       <section class="results" aria-label="Query results">
         <div class="results-heading">
           <h2>Results</h2>
-          <span>{queryResult.count} {queryResult.count === 1 ? 'row' : 'rows'}</span>
+          <div class="results-actions">
+            <span>{queryResult.count} {queryResult.count === 1 ? 'row' : 'rows'}</span>
+            <a id="download-csv-button" href="/api/download?type=csv">
+              <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M12 3v11m0 0 4-4m-4 4-4-4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" />
+              </svg>
+              <span>CSV</span>
+            </a>
+          </div>
         </div>
         <div class="table-wrap">
           <table>
@@ -272,6 +280,48 @@
     font-size: 0.85rem;
   }
 
+  .results-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  #download-csv-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 10px;
+    border: 1px solid var(--accent-border);
+    border-radius: 7px;
+    color: var(--accent);
+    background: var(--accent-bg);
+    font: 600 0.82rem var(--sans);
+    line-height: 1.2;
+    text-decoration: none;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  }
+
+  #download-csv-button svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+  }
+
+  #download-csv-button:hover {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent-bg) 65%, var(--accent));
+    transform: translateY(-1px);
+  }
+
+  #download-csv-button:focus-visible {
+    outline: 3px solid var(--accent-border);
+    outline-offset: 2px;
+  }
+
   .table-wrap {
     /* Keep large result sets self-contained so both scrollbars stay visible. */
     max-height: min(60vh, 640px);
@@ -358,6 +408,10 @@
     th,
     td {
       padding-inline: 14px;
+    }
+
+    .results-actions {
+      gap: 10px;
     }
   }
 </style>
