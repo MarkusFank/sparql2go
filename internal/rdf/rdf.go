@@ -32,7 +32,7 @@ func Init(inputFile string) error {
 	graph = rdflibgo.NewGraph()
 	switch ext {
 	case ".nt":
-		if err = nt.Parse(graph, file); err != nil {
+		if err = nt.Parse(graph, file, nt.WithUnboundedLines()); err != nil {
 			return err
 		}
 	case ".ttl":
